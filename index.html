@@ -1,10 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+			rel="stylesheet"
+		/>
+
 		<title>A-B Loop and Crossfade</title>
+		<style>
+			/* Kanit font - https://fonts.google.com/specimen/Kanit */
+			:root {
+				font-family: 'Kanit', sans-serif;
+			}
+
+			/* Unfretted Color Scheme - https://colors.lol/unfretted */
+			:root {
+				color: #ffd8b1;
+				background: #610023;
+				accent-color: #ffd8b1;
+			}
+
+			main {
+				display: flex;
+				flex-direction: column;
+				width: 100%;
+				gap: 1em;
+			}
+
+			h1 {
+				font-weight: 400;
+				border-bottom: solid 1px currentColor;
+				margin: 0 0 0.5em 0;
+				padding: 0.5em 0em;
+				text-align: center;
+			}
+
+			fieldset {
+				display: flex;
+				flex-direction: column;
+				gap: 0.25em;
+				border-radius: 20px;
+				border-color: currentColor;
+				border-style: solid;
+			}
+
+			fieldset div {
+				display: flex;
+				gap: 1em;
+				align-items: center;
+			}
+		</style>
 	</head>
 	<body>
-		<main style="display: flex; flex-direction: column">
+		<main>
 			<h1>A-B Loop And Crossfade</h1>
 			<label>
 				Master Volume
@@ -12,37 +62,45 @@
 				<output id="masterVolumeOutput">100</output>
 			</label>
 			<input id="file" type="file" accept="audio/*" />
-			<audio id="audio1" controls></audio>
-			<label>
-				Track 1 Volume
-				<input id="track1Volume" type="range" min="0" max="1" step="any" value="1" disabled />
-				<output id="track1VolumeOutput">1.000</output>
-			</label>
-			<audio id="audio2" controls></audio>
-			<label>
-				Track 2 Volume
-				<input id="track2Volume" type="range" min="0" max="1" step="any" value="1" disabled />
-				<output id="track2VolumeOutput">1.000</output>
-			</label>
-			<label>
-				Point A
-				<input id="pointA" type="range" min="0" max="100" step="1" value="10" />
-				<output id="pointAOutput">0:10</output>
-			</label>
-			<label>
-				Point B
-				<input id="pointB" type="range" min="0" max="100" step="1" value="90" />
-				<output id="pointBOutput">1:30</output>
-			</label>
-			<label>
-				Passthrough
-				<input id="passthrough" type="checkbox" />
-			</label>
-			<label>
-				Crossfade
-				<input id="crossfade" type="range" min="0" max="5000" step="100" value="1500" />
-				<output id="crossfadeOutput">1500 ms</output>
-			</label>
+			<fieldset>
+				<legend>Tracks</legend>
+				<div>
+					<audio id="audio1" controls></audio>
+					<label>
+						<input id="track1Volume" type="range" min="0" max="1" step="any" value="1" disabled />
+						<output id="track1VolumeOutput">1.000</output>
+					</label>
+				</div>
+				<div>
+					<audio id="audio2" controls></audio>
+					<label>
+						<input id="track2Volume" type="range" min="0" max="1" step="any" value="1" disabled />
+						<output id="track2VolumeOutput">1.000</output>
+					</label>
+				</div>
+			</fieldset>
+			<fieldset>
+				<legend>Controls</legend>
+				<label>
+					Point A
+					<input id="pointA" type="range" min="0" max="100" step="1" value="10" />
+					<output id="pointAOutput">0:10</output>
+				</label>
+				<label>
+					Point B
+					<input id="pointB" type="range" min="0" max="100" step="1" value="90" />
+					<output id="pointBOutput">1:30</output>
+				</label>
+				<label>
+					Passthrough
+					<input id="passthrough" type="checkbox" />
+				</label>
+				<label>
+					Crossfade
+					<input id="crossfade" type="range" min="0" max="5000" step="100" value="1500" />
+					<output id="crossfadeOutput">1500 ms</output>
+				</label>
+			</fieldset>
 		</main>
 		<script>
 			const onPassthroughChange = () => {
