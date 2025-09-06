@@ -27,6 +27,9 @@
 				flex-direction: column;
 				width: 100%;
 				gap: 1em;
+
+				max-width: 500px;
+				margin: auto;
 			}
 
 			h1 {
@@ -46,16 +49,24 @@
 				border-style: solid;
 			}
 
-			fieldset div {
+			audio {
+				width: 100%;
+			}
+
+			label {
 				display: flex;
-				gap: 1em;
 				align-items: center;
+				gap: 0.2em;
+			}
+
+			input[type='range'] {
+				flex: 1;
 			}
 		</style>
 	</head>
 	<body>
+		<h1>A-B Loop And Crossfade</h1>
 		<main>
-			<h1>A-B Loop And Crossfade</h1>
 			<label>
 				Master Volume
 				<input id="masterVolume" type="range" min="0" max="100" step="1" value="100" />
@@ -64,20 +75,16 @@
 			<input id="file" type="file" accept="audio/*" />
 			<fieldset>
 				<legend>Tracks</legend>
-				<div>
-					<audio id="audio1" controls></audio>
-					<label>
-						<input id="track1Volume" type="range" min="0" max="1" step="any" value="1" disabled />
-						<output id="track1VolumeOutput">1.000</output>
-					</label>
-				</div>
-				<div>
-					<audio id="audio2" controls></audio>
-					<label>
-						<input id="track2Volume" type="range" min="0" max="1" step="any" value="1" disabled />
-						<output id="track2VolumeOutput">1.000</output>
-					</label>
-				</div>
+				<audio id="audio1" controls></audio>
+				<label>
+					Volume <input id="track1Volume" type="range" min="0" max="1" step="any" value="1" disabled />
+					<output id="track1VolumeOutput">1.000</output>
+				</label>
+				<audio id="audio2" controls></audio>
+				<label>
+					Volume <input id="track2Volume" type="range" min="0" max="1" step="any" value="1" disabled />
+					<output id="track2VolumeOutput">1.000</output>
+				</label>
 			</fieldset>
 			<fieldset>
 				<legend>Controls</legend>
