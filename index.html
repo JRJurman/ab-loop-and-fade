@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<meta charset="UTF-8" />
-		<title>A-B Loop Demo</title>
+		<title>A-B Loop and Crossfade</title>
 	</head>
 	<body>
 		<main style="display: flex; flex-direction: column">
@@ -36,11 +35,21 @@
 				<output id="pointBOutput">1:30</output>
 			</label>
 			<label>
+				Passthrough
+				<input id="passthrough" type="checkbox" />
+			</label>
+			<label>
 				Crossfade
-				<input id="crossfade" type="range" min="0" max="3000" step="100" value="500" />
-				<output id="crossfadeOutput">500 ms</output>
+				<input id="crossfade" type="range" min="0" max="5000" step="100" value="1500" />
+				<output id="crossfadeOutput">1500 ms</output>
 			</label>
 		</main>
+		<script>
+			const onPassthroughChange = () => {
+				pointB.disabled = passthrough.checked;
+			};
+			passthrough.addEventListener('change', onPassthroughChange);
+		</script>
 		<script>
 			const onMasterVolumeChange = () => {
 				masterVolumeOutput.value = masterVolume.value;
@@ -90,7 +99,8 @@
 					pointB.max = duration;
 				};
 			});
-
+		</script>
+		<script>
 			const intervalMS = 10;
 			const startCrossfade = (fromAudioElement, toAudioElement) => {
 				// set data attributes (so we can style and determine which elements are which)
@@ -134,6 +144,10 @@
 				}
 				// if the element is paused, do nothing
 				if (audioElement.paused) {
+					return;
+				}
+				// if passthrough is enabled, do nothing
+				if (passthrough.checked) {
 					return;
 				}
 				// if we've hit the end (point B), start the other audio element
