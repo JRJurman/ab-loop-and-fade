@@ -248,6 +248,7 @@
 			const searchParams = new URLSearchParams(window.location.search);
 			if (searchParams.has('pageTitle')) {
 				pageTitle.textContent = searchParams.get('pageTitle');
+				document.title = searchParams.get('pageTitle');
 			}
 		</script>
 		<script>
