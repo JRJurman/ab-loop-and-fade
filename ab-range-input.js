@@ -72,7 +72,9 @@ class ABRangeInput extends HTMLElement {
 
 		// if this value could be in the search params, check there as well
 		const searchValue = new URLSearchParams(window.location.search).get(this.id);
-		this.inputElement.setAttribute('value', searchValue || this.getAttribute('value'));
+		const value = searchValue || this.getAttribute('value');
+		this.value = value;
+		this.inputElement.setAttribute('value', this.value);
 
 		if (this.hasAttribute('disabled')) {
 			this.inputElement.setAttribute('disabled', '');
