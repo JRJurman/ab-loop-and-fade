@@ -7,6 +7,7 @@
 			href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
 			rel="stylesheet"
 		/>
+		<script src="./ab-range-input.js"></script>
 
 		<title>A-B Loop and Crossfade</title>
 		<style>
@@ -117,46 +118,30 @@
 	<body>
 		<h1>A-B Loop And Crossfade</h1>
 		<main>
-			<label>
-				Master Volume
-				<input id="masterVolume" type="range" min="0" max="100" step="1" value="100" />
-				<output id="masterVolumeOutput">100</output>
-			</label>
+			<ab-range-input id="masterVolume" min="0" max="100" step="1" value="100">Master Volume</ab-range-input>
 			<input id="file" type="file" accept="audio/*" />
 			<fieldset>
 				<legend>Tracks</legend>
 				<audio id="audio1" controls></audio>
-				<label>
-					Volume <input id="track1Volume" type="range" min="0" max="1" step="any" value="1" disabled />
-					<output id="track1VolumeOutput">1.000</output>
-				</label>
+				<ab-range-input id="track1Volume" min="0" max="1" step="any" value="1" format="float" disabled>
+					Volume
+				</ab-range-input>
 				<audio id="audio2" controls></audio>
-				<label>
-					Volume <input id="track2Volume" type="range" min="0" max="1" step="any" value="1" disabled />
-					<output id="track2VolumeOutput">1.000</output>
-				</label>
+				<ab-range-input id="track2Volume" min="0" max="1" step="any" value="1" format="float" disabled>
+					Volume
+				</ab-range-input>
 			</fieldset>
 			<fieldset>
 				<legend>Controls</legend>
-				<label>
-					Point A
-					<input id="pointA" type="range" min="0" max="100" step="1" value="10" />
-					<output id="pointAOutput">0:10</output>
-				</label>
-				<label>
-					Point B
-					<input id="pointB" type="range" min="0" max="100" step="1" value="90" />
-					<output id="pointBOutput">1:30</output>
-				</label>
+				<ab-range-input id="pointA" min="0" max="100" step="1" value="30" format="time">Point A</ab-range-input>
+				<ab-range-input id="pointB" min="0" max="100" step="1" value="90" format="time">Point B</ab-range-input>
 				<label>
 					Passthrough
 					<input id="passthrough" type="checkbox" />
 				</label>
-				<label>
+				<ab-range-input id="crossfade" min="0" max="5000" step="100" value="1500" format="ms">
 					Crossfade
-					<input id="crossfade" type="range" min="0" max="5000" step="100" value="1500" />
-					<output id="crossfadeOutput">1500 ms</output>
-				</label>
+				</ab-range-input>
 			</fieldset>
 		</main>
 		<footer>
@@ -222,35 +207,17 @@
 
 			// wire master volume control
 			const onMasterVolumeChange = () => {
-				masterVolumeOutput.value = masterVolume.value;
 				audio1.volume = masterVolume.value / 100;
 				audio2.volume = masterVolume.value / 100;
 			};
 			masterVolume.addEventListener('input', onMasterVolumeChange);
 
 			// wire track volume controls
-			const onVolumeChange = (audioElement, trackInput, trackOutput) => {
+			const onVolumeChange = (audioElement, trackInput) => {
 				trackInput.value = audioElement.volume;
-				trackOutput.value = audioElement.volume.toFixed(3);
 			};
-			audio1.addEventListener('volumechange', () => onVolumeChange(audio1, track1Volume, track1VolumeOutput));
-			audio2.addEventListener('volumechange', () => onVolumeChange(audio2, track2Volume, track2VolumeOutput));
-
-			// wire point A and B range controls
-			const onUpdateRangeOutput = (rangeInput, rangeOutput) => {
-				const rawSeconds = rangeInput.value % 60;
-				const seconds = rawSeconds < 10 ? `0${rawSeconds}` : rawSeconds;
-				const minutes = Math.floor(rangeInput.value / 60);
-				rangeOutput.value = `${minutes}:${seconds}`;
-			};
-			pointA.addEventListener('input', () => onUpdateRangeOutput(pointA, pointAOutput));
-			pointB.addEventListener('input', () => onUpdateRangeOutput(pointB, pointBOutput));
-
-			// wire crossfade range control
-			const onUpdateCrossfade = () => {
-				crossfadeOutput.value = `${crossfade.value} ms`;
-			};
-			crossfade.addEventListener('input', onUpdateCrossfade);
+			audio1.addEventListener('volumechange', () => onVolumeChange(audio1, track1Volume));
+			audio2.addEventListener('volumechange', () => onVolumeChange(audio2, track2Volume));
 
 			// wire file loading control
 			file.addEventListener('change', () => {
@@ -298,7 +265,7 @@
 				// change the volume based on our intervalMS and crossfade value
 				const volumeIncrement = intervalMS / crossfade.value;
 				fromAudioElement.volume = Math.max(fromAudioElement.volume - volumeIncrement, 0);
-				toAudioElement.volume = Math.min(toAudioElement.volume + volumeIncrement, 1);
+				toAudioElement.volume = Math.min(toAudioElement.volume + volumeIncrement, masterVolumeAudioValue);
 			};
 
 			const onTimeUpdate = (audioElement, otherAudioElement) => {
