@@ -69,7 +69,11 @@ class ABRangeInput extends HTMLElement {
 		this.inputElement.setAttribute('min', this.getAttribute('min'));
 		this.inputElement.setAttribute('max', this.getAttribute('max'));
 		this.inputElement.setAttribute('step', this.getAttribute('step'));
-		this.inputElement.setAttribute('value', this.getAttribute('value'));
+
+		// if this value could be in the search params, check there as well
+		const searchValue = new URLSearchParams(window.location.search).get(this.id);
+		this.inputElement.setAttribute('value', searchValue || this.getAttribute('value'));
+
 		if (this.hasAttribute('disabled')) {
 			this.inputElement.setAttribute('disabled', '');
 		}
@@ -93,9 +97,13 @@ class ABRangeInput extends HTMLElement {
 			return;
 		}
 
-		// update the output element based on new a new value
 		if (attributeName === 'value') {
+			// update the output element based on new a new value
 			this.updateOutputValue();
+			// update the query parameter if this is storable with search params
+			if (this.hasAttribute('param')) {
+				this.updateSearchParams();
+			}
 		}
 
 		if (attributeName === 'disabled') {
@@ -121,6 +129,12 @@ class ABRangeInput extends HTMLElement {
 		} else {
 			this.outputElement.value = this.inputElement.value;
 		}
+	}
+
+	updateSearchParams() {
+		const url = new URL(window.location.href);
+		url.searchParams.set(this.id, this.value);
+		window.history.replaceState(null, '', url.toString());
 	}
 }
 
