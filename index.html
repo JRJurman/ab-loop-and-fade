@@ -11,15 +11,47 @@
 		<title>A-B Loop and Crossfade</title>
 		<style>
 			/* Kanit font - https://fonts.google.com/specimen/Kanit */
-			:root {
+			:root,
+			button {
 				font-family: 'Kanit', sans-serif;
+			}
+
+			body {
+				margin: 0;
+			}
+
+			button {
+				text-decoration: underline;
+				cursor: pointer;
+				background: none;
+				color: currentColor;
+				border: none;
+				font-size: 1em;
+				font-weight: inherit;
+				padding: 0;
+			}
+
+			a {
+				color: currentColor;
 			}
 
 			/* Unfretted Color Scheme - https://colors.lol/unfretted */
 			:root {
-				color: #ffd8b1;
-				background: #610023;
-				accent-color: #ffd8b1;
+				--foreground-color: #ffd8b1;
+				--background-color: #610023;
+				color: var(--foreground-color);
+				background: var(--background-color);
+				accent-color: var(--foreground-color);
+			}
+
+			dialog {
+				color: white;
+				background: var(--background-color);
+
+				h2,
+				button {
+					color: var(--foreground-color);
+				}
 			}
 
 			main {
@@ -61,6 +93,24 @@
 
 			input[type='range'] {
 				flex: 1;
+			}
+
+			footer {
+				position: absolute;
+				bottom: 0;
+				width: 100%;
+				text-align: center;
+				background: oklch(from var(--background-color) 0.2 c h);
+			}
+
+			dialog {
+				font-size: 0.8em;
+				max-width: 600px;
+				color: white;
+			}
+
+			ol {
+				padding-left: 1em;
 			}
 		</style>
 	</head>
@@ -109,29 +159,84 @@
 				</label>
 			</fieldset>
 		</main>
+		<footer>
+			Created by <a href="https://jrjurman.com">Jesse Jurman</a>.
+			<button id="aboutButton" commandfor="aboutDialog" command="show-modal">About / How to Use</button>.
+		</footer>
+		<dialog id="aboutDialog" closedby="any">
+			<h2>What is A-B Loop and Crossfade?</h2>
+			<p>
+				This web application is a tool for quickly creating background loops with tracks that might otherwise have a
+				natural fade at the start and end of the track.
+			</p>
+			<p style="font-style: italic">This application collects no data and runs entirely local to your computer.</p>
+			<h2>How do I use this?</h2>
+			<ol>
+				<li>Select an audio file you have access to on your computer.</li>
+				<li>Drag the Point A and Point B sliders to the start and end of where you want the loop to be.</li>
+				<li>Hit the play button on either of track players!</li>
+			</ol>
+			<p>
+				After doing the above, you should hear the track play. Once the player reaches your "Point B" timestamp, it will
+				start to fade the current track and start up the track on the second player, starting at your "Point A"
+				timestamp. This will repeat between both players until you pause, or enable "Passthrough".
+			</p>
+			<h2>What are these controls?</h2>
+			<p>
+				<strong>Master Volume - </strong>
+				Since each track needs to dynamically change its volume up and down, we have a master control at the top so you
+				can set the max volume of both at once.
+			</p>
+			<p>
+				<strong>Point A and Point B - </strong>
+				The start and end of your loop. When one of the players hits "Point B", the other player will start playing at
+				"Point A".
+			</p>
+			<p>
+				<strong>Passthrough - </strong>
+				If this is enabled, we will stop looping, and allow the player to continue to the end. This is useful if you
+				want the track to naturally stop.
+			</p>
+			<p>
+				<strong>Crossfade - </strong>
+				How long you want both of the tracks to be playing on top of each other. A longer crossfade can make the
+				transition feel more seamless.
+			</p>
+			<button id="closeButton" commandfor="aboutDialog" command="close">Start Looping!</button>
+		</dialog>
 		<script>
+			// dialog wiring (ideally this would be handled by commandfor, but support is not universal yet)
+			aboutButton.addEventListener('click', () => {
+				aboutDialog.showModal();
+			});
+			closeButton.addEventListener('click', () => {
+				aboutDialog.close();
+			});
+		</script>
+		<script>
+			// wire passthrough handler
 			const onPassthroughChange = () => {
 				pointB.disabled = passthrough.checked;
 			};
 			passthrough.addEventListener('change', onPassthroughChange);
-		</script>
-		<script>
+
+			// wire master volume control
 			const onMasterVolumeChange = () => {
 				masterVolumeOutput.value = masterVolume.value;
 				audio1.volume = masterVolume.value / 100;
 				audio2.volume = masterVolume.value / 100;
 			};
 			masterVolume.addEventListener('input', onMasterVolumeChange);
-		</script>
-		<script>
+
+			// wire track volume controls
 			const onVolumeChange = (audioElement, trackInput, trackOutput) => {
 				trackInput.value = audioElement.volume;
 				trackOutput.value = audioElement.volume.toFixed(3);
 			};
 			audio1.addEventListener('volumechange', () => onVolumeChange(audio1, track1Volume, track1VolumeOutput));
 			audio2.addEventListener('volumechange', () => onVolumeChange(audio2, track2Volume, track2VolumeOutput));
-		</script>
-		<script>
+
+			// wire point A and B range controls
 			const onUpdateRangeOutput = (rangeInput, rangeOutput) => {
 				const rawSeconds = rangeInput.value % 60;
 				const seconds = rawSeconds < 10 ? `0${rawSeconds}` : rawSeconds;
@@ -140,20 +245,14 @@
 			};
 			pointA.addEventListener('input', () => onUpdateRangeOutput(pointA, pointAOutput));
 			pointB.addEventListener('input', () => onUpdateRangeOutput(pointB, pointBOutput));
-		</script>
-		<script>
+
+			// wire crossfade range control
 			const onUpdateCrossfade = () => {
 				crossfadeOutput.value = `${crossfade.value} ms`;
 			};
 			crossfade.addEventListener('input', onUpdateCrossfade);
-		</script>
-		<script>
-			const onUpdateMasterVolume = () => {
-				masterVolumeOutput.value = masterVolume.value;
-				masterVolume.addEventListener('input', onUpdateMasterVolume);
-			};
-		</script>
-		<script>
+
+			// wire file loading control
 			file.addEventListener('change', () => {
 				const url = URL.createObjectURL(file.files[0]);
 				audio1.src = url;
@@ -166,6 +265,8 @@
 			});
 		</script>
 		<script>
+			// logic for triggering and processing the A-B loop and crossfade
+
 			const intervalMS = 10;
 			const startCrossfade = (fromAudioElement, toAudioElement) => {
 				// set data attributes (so we can style and determine which elements are which)
