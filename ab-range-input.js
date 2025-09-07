@@ -93,9 +93,15 @@ class ABRangeInput extends HTMLElement {
 		this.updateOutputValue();
 	}
 
-	attributeChangedCallback(attributeName) {
+	attributeChangedCallback(attributeName, oldValue, newValue) {
 		// if we haven't created the shadowRoot, don't worry about updating anything
 		if (!this.isConnected) {
+			return;
+		}
+
+		// if the value hasn't changed, don't do anything
+		// (this prevents query parameters from being set when we don't actually have updates)
+		if (oldValue == newValue) {
 			return;
 		}
 

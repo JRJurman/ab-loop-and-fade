@@ -41,3 +41,8 @@ Tiny Web App for AB Looping and Cross fade for Background music tracks
 	How long you want both of the tracks to be playing on top of each other. A longer crossfade can make the
 	transition feel more seamless.
 </p>
+<p>
+	<strong>Pro Tip!</strong> The URL will save all of your settings for these controls. Copy or bookmark these
+	options for each track you want to loop! Additionally, you can set the title of the page to remember what this
+	configuration is for.
+</p>

@@ -117,7 +117,10 @@
 			dialog {
 				font-size: 0.8em;
 				max-width: 600px;
-				color: white;
+			}
+
+			dialog h2 {
+				margin-top: 0;
 			}
 
 			ol {
@@ -126,10 +129,14 @@
 		</style>
 	</head>
 	<body>
-		<h1>A-B Loop And Crossfade</h1>
+		<h1 id="pageTitle" contenteditable>A-B Loop And Crossfade</h1>
+		<footer>
+			Created by <a href="https://jrjurman.com">Jesse Jurman</a>.
+			<button id="aboutButton" commandfor="aboutDialog" command="show-modal">About / How to Use</button>.
+		</footer>
 		<main>
-			<ab-range-input id="masterVolume" min="0" max="100" step="1" value="100">Master Volume</ab-range-input>
-			<input id="file" type="file" accept="audio/*" />
+			<ab-range-input id="masterVolume" min="0" max="100" step="1" value="100" param>Master Volume</ab-range-input>
+			<input id="fileInput" type="file" accept="audio/*" />
 			<fieldset>
 				<legend>Tracks</legend>
 				<audio id="audio1" controls></audio>
@@ -154,10 +161,6 @@
 				</ab-range-input>
 			</fieldset>
 		</main>
-		<footer>
-			Created by <a href="https://jrjurman.com">Jesse Jurman</a>.
-			<button id="aboutButton" commandfor="aboutDialog" command="show-modal">About / How to Use</button>.
-		</footer>
 		<dialog id="aboutDialog" closedby="any">
 			<h2>What is A-B Loop and Crossfade?</h2>
 			<p>
@@ -197,6 +200,11 @@
 				How long you want both of the tracks to be playing on top of each other. A longer crossfade can make the
 				transition feel more seamless.
 			</p>
+			<p>
+				<strong>Pro Tip!</strong> The URL will save all of your settings for these controls. Copy or bookmark these
+				options for each track you want to loop! Additionally, you can set the title of the page to remember what this
+				configuration is for.
+			</p>
 			<button id="closeButton" commandfor="aboutDialog" command="close">Start Looping!</button>
 		</dialog>
 		<script>
@@ -207,6 +215,40 @@
 			closeButton.addEventListener('click', () => {
 				aboutDialog.close();
 			});
+		</script>
+		<script>
+			// wire input handler for the page title
+			pageTitle.addEventListener('input', () => {
+				// update document title
+				document.title = pageTitle.textContent;
+
+				// update query parameter
+				const url = new URL(window.location.href);
+				url.searchParams.set('pageTitle', pageTitle.textContent);
+				window.history.replaceState(null, '', url.toString());
+			});
+
+			pageTitle.addEventListener('blur', () => {
+				// if the page title was emptied, reset it
+				if (pageTitle.textContent === '') {
+					// update element
+					pageTitle.textContent = 'A-B Loop And Crossfade';
+
+					// update document title (first try audio file name, then fallback to this element)
+					document.title = fileInput.files?.[0]?.name || pageTitle.textContent;
+
+					// remove query parameter
+					const url = new URL(window.location.href);
+					url.searchParams.delete('pageTitle');
+					window.history.replaceState(null, '', url.toString());
+				}
+			});
+
+			// load page title if we already have one in the URL on page load
+			const searchParams = new URLSearchParams(window.location.search);
+			if (searchParams.has('pageTitle')) {
+				pageTitle.textContent = searchParams.get('pageTitle');
+			}
 		</script>
 		<script>
 			// wire passthrough handler
@@ -230,8 +272,8 @@
 			audio2.addEventListener('volumechange', () => onVolumeChange(audio2, track2Volume));
 
 			// wire file loading control
-			file.addEventListener('change', () => {
-				const url = URL.createObjectURL(file.files[0]);
+			fileInput.addEventListener('change', () => {
+				const url = URL.createObjectURL(fileInput.files?.[0]);
 				audio1.src = url;
 				audio2.src = url;
 				audio1.onloadedmetadata = () => {
@@ -240,7 +282,10 @@
 					pointB.max = duration;
 				};
 
-				document.title = file.files[0].name;
+				// if pageTitle is the default, set it to the track name
+				if (pageTitle.textContent === 'A-B Loop And Crossfade') {
+					document.title = fileInput.files?.[0]?.name;
+				}
 			});
 		</script>
 		<script>
