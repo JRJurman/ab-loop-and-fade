@@ -67,14 +67,18 @@ class ABRangeInput extends HTMLElement {
 
 		this.inputElement.setAttribute('type', 'range');
 		this.inputElement.setAttribute('min', this.getAttribute('min'));
-		this.inputElement.setAttribute('max', this.getAttribute('max'));
 		this.inputElement.setAttribute('step', this.getAttribute('step'));
 
 		// if this value could be in the search params, check there as well
 		const searchValue = new URLSearchParams(window.location.search).get(this.id);
 		const value = searchValue || this.getAttribute('value');
 		this.value = value;
-		this.inputElement.setAttribute('value', this.value);
+
+		// set the max (if this is below the value, update the max to that)
+		const maxValue = Math.max(this.getAttribute('max'), this.value);
+
+		this.inputElement.setAttribute('max', maxValue);
+		this.inputElement.value = this.value;
 
 		if (this.hasAttribute('disabled')) {
 			this.inputElement.setAttribute('disabled', '');
