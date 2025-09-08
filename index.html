@@ -265,6 +265,9 @@
 			};
 			masterVolume.addEventListener('input', onMasterVolumeChange);
 
+			// trigger this initially for any query-param loaded value
+			onMasterVolumeChange();
+
 			// wire track volume controls
 			const onVolumeChange = (audioElement, trackInput) => {
 				trackInput.value = audioElement.volume;
