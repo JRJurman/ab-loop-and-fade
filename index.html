@@ -105,7 +105,11 @@
 				* {
 					width: 100%;
 					max-width: 500px;
-					margin: auto;
+					margin: 0 auto;
+				}
+
+				button {
+					margin: 1em auto;
 				}
 			}
 
@@ -161,8 +165,8 @@
 			<ab-range-input id="masterVolume" min="0" max="100" step="1" value="100">Master Volume</ab-range-input>
 			<audio-blocks id="audioBlocks">
 				<ab-audio-block></ab-audio-block>
-				<ab-audio-block></ab-audio-block>
 			</audio-blocks>
+			<button id="addTrackButton">Add Track</button>
 		</main>
 		<dialog id="aboutDialog" closedby="any">
 			<section>
@@ -216,9 +220,6 @@
 			};
 			masterVolume.addEventListener('input', onMasterVolumeChange);
 
-			// trigger this initially for any query-param loaded value
-			onMasterVolumeChange();
-
 			// wire file loading control for setting document title
 			const firstFileInput = audioBlocks.firstElementChild.fileInput;
 			firstFileInput.addEventListener('change', async () => {
@@ -227,6 +228,12 @@
 					document.title = firstFileInput.files?.[0]?.name;
 					pageTitle.titleFallback = firstFileInput.files?.[0]?.name;
 				}
+			});
+
+			// wire control for adding more tracks
+			addTrackButton.addEventListener('click', () => {
+				const newAudioBlock = document.createElement('ab-audio-block');
+				audioBlocks.appendChild(newAudioBlock);
 			});
 		</script>
 	</body>

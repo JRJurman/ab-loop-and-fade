@@ -56,20 +56,31 @@ class ABAudioBlock extends HTMLElement {
 		this.controls = document.createElement('ab-controls');
 		controlFieldset.append(controlFieldsetLegend, this.controls);
 
-		this.shadowRoot.append(this.fileInput, trackFieldset, controlFieldset);
+		const detailsElement = document.createElement('details');
+		detailsElement.open = true;
+		this.detailsElementSummary = document.createElement('summary');
+		this.detailsElementSummary.style.display = 'none';
+		detailsElement.append(this.detailsElementSummary, this.fileInput, trackFieldset, controlFieldset);
+		this.shadowRoot.append(detailsElement);
 
 		// wire file loading control
 		this.fileInput.addEventListener('change', async () => {
 			const url = URL.createObjectURL(this.fileInput.files?.[0]);
+
+			// load the audio to the audio players
 			this.audioTracks.loadSource(url);
+
+			// update the point A and B max values
 			const duration = await getAudioDuration(url);
 			this.controls.pointA.max = duration;
 			this.controls.pointB.max = duration;
 
-			// if pageTitle is the default, and there is only one audio block, set it to the track name
-			if (pageTitle.isDefault()) {
-				document.title = this.fileInput.files?.[0]?.name;
-			}
+			// update the summary element
+			this.detailsElementSummary.style.display = '';
+			this.detailsElementSummary.textContent = this.fileInput.files?.[0].name;
+
+			// hide the file input control
+			this.fileInput.style.display = 'none';
 		});
 
 		// wire crossfade and point elements to audio tracks
