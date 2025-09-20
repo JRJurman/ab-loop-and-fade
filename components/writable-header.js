@@ -32,6 +32,7 @@ class WritableHeader extends HTMLElement {
 
 		// save existing text content as a fallback, if this element is ever cleared
 		this.fallback = headerElement.textContent;
+		this.titleFallback = headerElement.textContent;
 
 		// wire input handler for the page title
 		headerElement.addEventListener('input', () => {
@@ -50,8 +51,8 @@ class WritableHeader extends HTMLElement {
 				// update element
 				headerElement.textContent = this.fallback;
 
-				// update document title (first try audio file name, then fallback to this element)
-				this.ownerDocument.title = fileInput.files?.[0]?.name || headerElement.textContent;
+				// update document title
+				this.ownerDocument.title = this.titleFallback;
 
 				// remove query parameter
 				const url = new URL(window.location.href);

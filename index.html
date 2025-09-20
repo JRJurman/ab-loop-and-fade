@@ -17,6 +17,7 @@
 		/>
 
 		<!-- components -->
+		<script src="./components/ab-audio-block.js"></script>
 		<script src="./components/ab-range-input.js"></script>
 		<script src="./components/ab-tracks.js"></script>
 		<script src="./components/ab-controls.js"></script>
@@ -69,7 +70,8 @@
 				}
 			}
 
-			main {
+			main,
+			audio-blocks {
 				display: flex;
 				flex-direction: column;
 				width: 100%;
@@ -85,15 +87,6 @@
 				margin: 0 0 0.5em 0;
 				padding: 0.5em 0em;
 				text-align: center;
-			}
-
-			fieldset {
-				display: flex;
-				flex-direction: column;
-				gap: 0.25em;
-				border-radius: 20px;
-				border-color: currentColor;
-				border-style: solid;
 			}
 
 			footer {
@@ -128,15 +121,9 @@
 		</footer>
 		<main>
 			<ab-range-input id="masterVolume" min="0" max="100" step="1" value="100">Master Volume</ab-range-input>
-			<input id="fileInput" type="file" accept="audio/*" />
-			<fieldset>
-				<legend>Tracks</legend>
-				<ab-tracks id="audioTracks"></ab-tracks>
-			</fieldset>
-			<fieldset>
-				<legend>Controls</legend>
-				<ab-controls id="controls"></ab-controls>
-			</fieldset>
+			<audio-blocks id="audioBlocks">
+				<ab-audio-block></ab-audio-block>
+			</audio-blocks>
 		</main>
 		<dialog id="aboutDialog" closedby="any">
 			<h2>What is A-B Loop and Crossfade?</h2>
@@ -182,45 +169,24 @@
 		<script>
 			// wire master volume control
 			const onMasterVolumeChange = () => {
-				audioTracks.setMasterVolume(masterVolume.value / 100);
+				[...audioBlocks.children].forEach((audioBlock) => {
+					audioBlock.audioTracks.setMasterVolume(masterVolume.value / 100);
+				});
 			};
 			masterVolume.addEventListener('input', onMasterVolumeChange);
 
 			// trigger this initially for any query-param loaded value
 			onMasterVolumeChange();
 
-			// helper function for getting audio duration
-			const getAudioDuration = (fileURL) => {
-				return new Promise((resolve, reject) => {
-					const audio = new Audio();
-					audio.src = fileURL;
-					audio.preload = 'metadata';
-
-					audio.onloadedmetadata = () => {
-						resolve(audio.duration);
-					};
-				});
-			};
-
-			// wire file loading control
-			fileInput.addEventListener('change', async () => {
-				const url = URL.createObjectURL(fileInput.files?.[0]);
-				audioTracks.loadSource(url);
-				const duration = await getAudioDuration(url);
-				controls.pointA.max = duration;
-				controls.pointB.max = duration;
-
-				// if pageTitle is the default, set it to the track name
-				if (pageTitle.isDefault()) {
-					document.title = fileInput.files?.[0]?.name;
+			// wire file loading control for setting document title
+			const firstFileInput = audioBlocks.firstElementChild.fileInput;
+			firstFileInput.addEventListener('change', async () => {
+				// if pageTitle is the default, and there is only one audio block, set it to the track name
+				if (pageTitle.isDefault() && audioBlocks.children.length === 1) {
+					document.title = firstFileInput.files?.[0]?.name;
+					pageTitle.titleFallback = firstFileInput.files?.[0]?.name;
 				}
 			});
-
-			// wire crossfade and point elements to audio tracks
-			controls.crossfade.addEventListener('input', () => (audioTracks.crossfade = parseInt(controls.crossfade.value)));
-			controls.pointA.addEventListener('input', () => (audioTracks.pointA = parseInt(controls.pointA.value)));
-			controls.pointB.addEventListener('input', () => (audioTracks.pointB = parseInt(controls.pointB.value)));
-			controls.passthrough.addEventListener('change', () => (audioTracks.passthrough = controls.passthrough.checked));
 		</script>
 	</body>
 </html>
