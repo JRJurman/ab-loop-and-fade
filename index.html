@@ -17,9 +17,10 @@
 		/>
 
 		<!-- components -->
-		<script src="./ab-range-input.js"></script>
-		<script src="./ab-tracks.js"></script>
-		<script src="./ab-controls.js"></script>
+		<script src="./components/ab-range-input.js"></script>
+		<script src="./components/ab-tracks.js"></script>
+		<script src="./components/ab-controls.js"></script>
+		<script src="./components/writable-header.js"></script>
 
 		<link rel="icon" href="./favicon.png" />
 
@@ -118,7 +119,9 @@
 		</style>
 	</head>
 	<body>
-		<h1 id="pageTitle" contenteditable>A-B Loop And Crossfade</h1>
+		<writable-header id="pageTitle">
+			<h1>A-B Loop And Crossfade</h1>
+		</writable-header>
 		<footer>
 			Created by <a href="https://jrjurman.com">Jesse Jurman</a>.
 			<button id="aboutButton" commandfor="aboutDialog" command="show-modal">About / How to Use</button>.
@@ -177,41 +180,6 @@
 			<button id="closeButton" commandfor="aboutDialog" command="close">Start Looping!</button>
 		</dialog>
 		<script>
-			// wire input handler for the page title
-			pageTitle.addEventListener('input', () => {
-				// update document title
-				document.title = pageTitle.textContent;
-
-				// update query parameter
-				const url = new URL(window.location.href);
-				url.searchParams.set('pageTitle', pageTitle.textContent);
-				window.history.replaceState(null, '', url.toString());
-			});
-
-			pageTitle.addEventListener('blur', () => {
-				// if the page title was emptied, reset it
-				if (pageTitle.textContent === '') {
-					// update element
-					pageTitle.textContent = 'A-B Loop And Crossfade';
-
-					// update document title (first try audio file name, then fallback to this element)
-					document.title = fileInput.files?.[0]?.name || pageTitle.textContent;
-
-					// remove query parameter
-					const url = new URL(window.location.href);
-					url.searchParams.delete('pageTitle');
-					window.history.replaceState(null, '', url.toString());
-				}
-			});
-
-			// load page title if we already have one in the URL on page load
-			const searchParams = new URLSearchParams(window.location.search);
-			if (searchParams.has('pageTitle')) {
-				pageTitle.textContent = searchParams.get('pageTitle');
-				document.title = searchParams.get('pageTitle');
-			}
-		</script>
-		<script>
 			// wire master volume control
 			const onMasterVolumeChange = () => {
 				audioTracks.setMasterVolume(masterVolume.value / 100);
@@ -243,7 +211,7 @@
 				controls.pointB.max = duration;
 
 				// if pageTitle is the default, set it to the track name
-				if (pageTitle.textContent === 'A-B Loop And Crossfade') {
+				if (pageTitle.isDefault()) {
 					document.title = fileInput.files?.[0]?.name;
 				}
 			});
