@@ -10,7 +10,7 @@ class ABAudioTracks extends HTMLElement {
 		super();
 
 		this.attachShadow({ mode: 'open' });
-		this.shadowRoot.adoptedStyleSheets = [abRangeInputStyleSheet];
+		this.shadowRoot.adoptedStyleSheets = [abAudioTracksStyleSheet];
 
 		this.masterVolume = 1;
 		this.crossfade = 1500;
@@ -30,19 +30,13 @@ class ABAudioTracks extends HTMLElement {
 		this.audio2.controls = true;
 
 		this.audio1Volume = document.createElement('ab-range-input');
-		this.audio1Volume.setAttribute('min', 0);
-		this.audio1Volume.setAttribute('max', 1);
-		this.audio1Volume.setAttribute('step', 'any');
-		this.audio1Volume.setAttribute('format', 'float');
+		this.audio1Volume.setCommonConfig(0, 1, 'any', 'float');
 		this.audio1Volume.value = 1;
 		this.audio1Volume.disabled = true;
 		this.audio1Volume.textContent = 'Volume';
 
 		this.audio2Volume = document.createElement('ab-range-input');
-		this.audio2Volume.setAttribute('min', 0);
-		this.audio2Volume.setAttribute('max', 1);
-		this.audio2Volume.setAttribute('step', 'any');
-		this.audio2Volume.setAttribute('format', 'float');
+		this.audio2Volume.setCommonConfig(0, 1, 'any', 'float');
 		this.audio2Volume.value = 1;
 		this.audio2Volume.disabled = true;
 		this.audio2Volume.textContent = 'Volume';
@@ -73,6 +67,7 @@ class ABAudioTracks extends HTMLElement {
 
 	watchForCrossFade() {
 		const intervalMS = 10;
+		// helper function to kick off crossfading
 		const startCrossfade = (fromAudioElement, toAudioElement) => {
 			this.crossFadeFrom = fromAudioElement;
 			this.crossFadeTo = toAudioElement;
@@ -86,6 +81,7 @@ class ABAudioTracks extends HTMLElement {
 			this.crossfadeIntervalId = setInterval(stepCrossfade, intervalMS);
 		};
 
+		// helper function to slowly control the volume of each audio player
 		const stepCrossfade = () => {
 			// change the volume based on our intervalMS and crossfade value
 			const volumeIncrement = intervalMS / this.crossfade;
@@ -101,6 +97,7 @@ class ABAudioTracks extends HTMLElement {
 			}
 		};
 
+		// helper function to check if we should be triggering a crossfade
 		const onTimeUpdate = (audioElement, otherAudioElement) => {
 			// if we're already crossfading, do nothing
 			if (this.crossFadeFrom || this.crossFadeTo) {

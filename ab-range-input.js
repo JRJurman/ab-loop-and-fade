@@ -58,12 +58,19 @@ class ABRangeInput extends HTMLElement {
 		this.setAttribute('max', newValue);
 	}
 
+	setCommonConfig(min, max, step, format) {
+		this.setAttribute('min', min);
+		this.setAttribute('max', max);
+		this.setAttribute('step', step);
+		this.setAttribute('format', format);
+	}
+
 	connectedCallback() {
 		// populate the shadow root with all the elements this component needs
-		this.labelElement = document.createElement('label');
 		this.inputElement = document.createElement('input');
 		this.outputElement = document.createElement('output');
-		this.slotElement = document.createElement('slot');
+		const labelElement = document.createElement('label');
+		const slotElement = document.createElement('slot');
 
 		this.inputElement.setAttribute('type', 'range');
 		this.inputElement.setAttribute('min', this.getAttribute('min'));
@@ -84,8 +91,8 @@ class ABRangeInput extends HTMLElement {
 			this.inputElement.setAttribute('disabled', '');
 		}
 
-		this.labelElement.append(this.slotElement, this.inputElement, this.outputElement);
-		this.shadowRoot.append(this.labelElement);
+		labelElement.append(slotElement, this.inputElement, this.outputElement);
+		this.shadowRoot.append(labelElement);
 
 		// wire up event listener for input
 		this.inputElement.addEventListener('input', () => {

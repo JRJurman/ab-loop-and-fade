@@ -19,6 +19,7 @@
 		<!-- components -->
 		<script src="./ab-range-input.js"></script>
 		<script src="./ab-tracks.js"></script>
+		<script src="./ab-controls.js"></script>
 
 		<link rel="icon" href="./favicon.png" />
 
@@ -94,16 +95,6 @@
 				border-style: solid;
 			}
 
-			label {
-				display: flex;
-				align-items: center;
-				gap: 0.2em;
-			}
-
-			input[type='range'] {
-				flex: 1;
-			}
-
 			footer {
 				position: absolute;
 				bottom: 0;
@@ -141,15 +132,7 @@
 			</fieldset>
 			<fieldset>
 				<legend>Controls</legend>
-				<ab-range-input id="pointA" min="0" max="100" step="1" value="30" format="time">Point A</ab-range-input>
-				<ab-range-input id="pointB" min="0" max="100" step="1" value="90" format="time">Point B</ab-range-input>
-				<label>
-					Passthrough
-					<input id="passthrough" type="checkbox" />
-				</label>
-				<ab-range-input id="crossfade" min="0" max="5000" step="100" value="1500" format="ms">
-					Crossfade
-				</ab-range-input>
+				<ab-controls id="controls"></ab-controls>
 			</fieldset>
 		</main>
 		<dialog id="aboutDialog" closedby="any">
@@ -191,22 +174,8 @@
 				How long you want both of the tracks to be playing on top of each other. A longer crossfade can make the
 				transition feel more seamless.
 			</p>
-			<p>
-				<strong>Pro Tip!</strong> The URL will save all of your settings for these controls. Copy or bookmark these
-				options for each track you want to loop! Additionally, you can set the title of the page to remember what this
-				configuration is for.
-			</p>
 			<button id="closeButton" commandfor="aboutDialog" command="close">Start Looping!</button>
 		</dialog>
-		<script>
-			// dialog wiring (ideally this would be handled by commandfor, but support is not universal yet)
-			aboutButton.addEventListener('click', () => {
-				aboutDialog.showModal();
-			});
-			closeButton.addEventListener('click', () => {
-				aboutDialog.close();
-			});
-		</script>
 		<script>
 			// wire input handler for the page title
 			pageTitle.addEventListener('input', () => {
@@ -243,12 +212,6 @@
 			}
 		</script>
 		<script>
-			// wire passthrough handler
-			const onPassthroughChange = () => {
-				pointB.disabled = passthrough.checked;
-			};
-			passthrough.addEventListener('change', onPassthroughChange);
-
 			// wire master volume control
 			const onMasterVolumeChange = () => {
 				audioTracks.setMasterVolume(masterVolume.value / 100);
@@ -276,8 +239,8 @@
 				const url = URL.createObjectURL(fileInput.files?.[0]);
 				audioTracks.loadSource(url);
 				const duration = await getAudioDuration(url);
-				pointA.max = duration;
-				pointB.max = duration;
+				controls.pointA.max = duration;
+				controls.pointB.max = duration;
 
 				// if pageTitle is the default, set it to the track name
 				if (pageTitle.textContent === 'A-B Loop And Crossfade') {
@@ -286,10 +249,10 @@
 			});
 
 			// wire crossfade and point elements to audio tracks
-			crossfade.addEventListener('input', () => (audioTracks.crossfade = parseInt(crossfade.value)));
-			pointA.addEventListener('input', () => (audioTracks.pointA = parseInt(pointA.value)));
-			pointB.addEventListener('input', () => (audioTracks.pointB = parseInt(pointB.value)));
-			passthrough.addEventListener('change', () => (audioTracks.passthrough = passthrough.checked));
+			controls.crossfade.addEventListener('input', () => (audioTracks.crossfade = parseInt(controls.crossfade.value)));
+			controls.pointA.addEventListener('input', () => (audioTracks.pointA = parseInt(controls.pointA.value)));
+			controls.pointB.addEventListener('input', () => (audioTracks.pointB = parseInt(controls.pointB.value)));
+			controls.passthrough.addEventListener('change', () => (audioTracks.passthrough = controls.passthrough.checked));
 		</script>
 	</body>
 </html>
