@@ -21,6 +21,10 @@ class ABAudioTracks extends HTMLElement {
 		this.passthrough = false;
 	}
 
+	get isPlaying() {
+		return !this.audio1.paused || !this.audio2.paused;
+	}
+
 	connectedCallback() {
 		// populate the shadow root with all the elements this component needs
 		this.audio1 = document.createElement('audio');
@@ -119,6 +123,11 @@ class ABAudioTracks extends HTMLElement {
 
 		this.audio1.addEventListener('timeupdate', () => onTimeUpdate(this.audio1, this.audio2));
 		this.audio2.addEventListener('timeupdate', () => onTimeUpdate(this.audio2, this.audio1));
+	}
+
+	addPlaybackListener(callback) {
+		this.audio1.addEventListener('timeupdate', callback);
+		this.audio2.addEventListener('timeupdate', callback);
 	}
 }
 

@@ -15,6 +15,10 @@ abAudioBlockStyleSheet.replaceSync(`
 		border-color: currentColor;
 		border-style: solid;
 	}
+
+	summary.playing::marker {
+		content: '🔊 ';
+	}
 `);
 
 // helper function for getting audio duration
@@ -65,7 +69,8 @@ class ABAudioBlock extends HTMLElement {
 
 		// wire file loading control
 		this.fileInput.addEventListener('change', async () => {
-			const url = URL.createObjectURL(this.fileInput.files?.[0]);
+			this.file = this.fileInput.files?.[0];
+			const url = URL.createObjectURL(this.file);
 
 			// load the audio to the audio players
 			this.audioTracks.loadSource(url);
@@ -77,7 +82,7 @@ class ABAudioBlock extends HTMLElement {
 
 			// update the summary element
 			this.detailsElementSummary.style.display = '';
-			this.detailsElementSummary.textContent = this.fileInput.files?.[0].name;
+			this.detailsElementSummary.textContent = this.file.name;
 
 			// hide the file input control
 			this.fileInput.style.display = 'none';
@@ -100,6 +105,16 @@ class ABAudioBlock extends HTMLElement {
 			'change',
 			() => (this.audioTracks.passthrough = this.controls.passthrough.checked)
 		);
+
+		// if audio is playing, update summary element
+		this.audioTracks.addPlaybackListener(() => {
+			if (this.audioTracks.isPlaying) {
+				this.detailsElementSummary.classList.add('playing');
+			}
+			if (!this.audioTracks.isPlaying) {
+				this.detailsElementSummary.classList.remove('playing');
+			}
+		});
 	}
 }
 
