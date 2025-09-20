@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
+		<title>A-B Loop and Crossfade</title>
+
+		<!-- Social Tags-->
+		<meta property="og:title" content="A-B Loop and Crossfade" />
+		<meta property="og:url" content="https://jrjurman.com/ab-loop-and-fade/" />
+		<meta property="og:image" content="https://jrjurman.com/ab-loop-and-fade/preview.png" />
+
 		<!-- font -->
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -11,15 +18,10 @@
 
 		<!-- components -->
 		<script src="./ab-range-input.js"></script>
+		<script src="./ab-tracks.js"></script>
 
 		<link rel="icon" href="./favicon.png" />
 
-		<!-- Social Tags-->
-		<meta property="og:title" content="A-B Loop and Crossfade" />
-		<meta property="og:url" content="https://jrjurman.com/ab-loop-and-fade/" />
-		<meta property="og:image" content="https://jrjurman.com/ab-loop-and-fade/preview.png" />
-
-		<title>A-B Loop and Crossfade</title>
 		<style>
 			/* Kanit font - https://fonts.google.com/specimen/Kanit */
 			:root,
@@ -92,10 +94,6 @@
 				border-style: solid;
 			}
 
-			audio {
-				width: 100%;
-			}
-
 			label {
 				display: flex;
 				align-items: center;
@@ -135,28 +133,21 @@
 			<button id="aboutButton" commandfor="aboutDialog" command="show-modal">About / How to Use</button>.
 		</footer>
 		<main>
-			<ab-range-input id="masterVolume" min="0" max="100" step="1" value="100" param>Master Volume</ab-range-input>
+			<ab-range-input id="masterVolume" min="0" max="100" step="1" value="100">Master Volume</ab-range-input>
 			<input id="fileInput" type="file" accept="audio/*" />
 			<fieldset>
 				<legend>Tracks</legend>
-				<audio id="audio1" controls></audio>
-				<ab-range-input id="track1Volume" min="0" max="1" step="any" value="1" format="float" disabled>
-					Volume
-				</ab-range-input>
-				<audio id="audio2" controls></audio>
-				<ab-range-input id="track2Volume" min="0" max="1" step="any" value="1" format="float" disabled>
-					Volume
-				</ab-range-input>
+				<ab-tracks id="audioTracks"></ab-tracks>
 			</fieldset>
 			<fieldset>
 				<legend>Controls</legend>
-				<ab-range-input id="pointA" min="0" max="100" step="1" value="30" format="time" param>Point A</ab-range-input>
-				<ab-range-input id="pointB" min="0" max="100" step="1" value="90" format="time" param>Point B</ab-range-input>
+				<ab-range-input id="pointA" min="0" max="100" step="1" value="30" format="time">Point A</ab-range-input>
+				<ab-range-input id="pointB" min="0" max="100" step="1" value="90" format="time">Point B</ab-range-input>
 				<label>
 					Passthrough
 					<input id="passthrough" type="checkbox" />
 				</label>
-				<ab-range-input id="crossfade" min="0" max="5000" step="100" value="1500" format="ms" param>
+				<ab-range-input id="crossfade" min="0" max="5000" step="100" value="1500" format="ms">
 					Crossfade
 				</ab-range-input>
 			</fieldset>
@@ -260,98 +251,45 @@
 
 			// wire master volume control
 			const onMasterVolumeChange = () => {
-				audio1.volume = masterVolume.value / 100;
-				audio2.volume = masterVolume.value / 100;
+				audioTracks.setMasterVolume(masterVolume.value / 100);
 			};
 			masterVolume.addEventListener('input', onMasterVolumeChange);
 
 			// trigger this initially for any query-param loaded value
 			onMasterVolumeChange();
 
-			// wire track volume controls
-			const onVolumeChange = (audioElement, trackInput) => {
-				trackInput.value = audioElement.volume;
+			// helper function for getting audio duration
+			const getAudioDuration = (fileURL) => {
+				return new Promise((resolve, reject) => {
+					const audio = new Audio();
+					audio.src = fileURL;
+					audio.preload = 'metadata';
+
+					audio.onloadedmetadata = () => {
+						resolve(audio.duration);
+					};
+				});
 			};
-			audio1.addEventListener('volumechange', () => onVolumeChange(audio1, track1Volume));
-			audio2.addEventListener('volumechange', () => onVolumeChange(audio2, track2Volume));
 
 			// wire file loading control
-			fileInput.addEventListener('change', () => {
+			fileInput.addEventListener('change', async () => {
 				const url = URL.createObjectURL(fileInput.files?.[0]);
-				audio1.src = url;
-				audio2.src = url;
-				audio1.onloadedmetadata = () => {
-					const duration = audio1.duration || 100;
-					pointA.max = duration;
-					pointB.max = duration;
-				};
+				audioTracks.loadSource(url);
+				const duration = await getAudioDuration(url);
+				pointA.max = duration;
+				pointB.max = duration;
 
 				// if pageTitle is the default, set it to the track name
 				if (pageTitle.textContent === 'A-B Loop And Crossfade') {
 					document.title = fileInput.files?.[0]?.name;
 				}
 			});
-		</script>
-		<script>
-			// logic for triggering and processing the A-B loop and crossfade
 
-			const intervalMS = 10;
-			const startCrossfade = (fromAudioElement, toAudioElement) => {
-				// set data attributes (so we can style and determine which elements are which)
-				fromAudioElement.setAttribute('data-crossfade', 'from');
-				toAudioElement.setAttribute('data-crossfade', 'to');
-
-				// setup our toAudioElement
-				toAudioElement.volume = 0;
-				toAudioElement.currentTime = pointA.value;
-				toAudioElement.play();
-
-				// fixed interval of 10 ms
-				window.crossfadeIntervalId = setInterval(stepCrossfade, intervalMS);
-			};
-
-			const stepCrossfade = () => {
-				const fromAudioElement = document.querySelector('[data-crossfade="from"]');
-				const toAudioElement = document.querySelector('[data-crossfade="to"]');
-
-				// if we've finished, clear the interval
-				const masterVolumeAudioValue = masterVolume.value / 100;
-				if (toAudioElement.volume >= masterVolumeAudioValue) {
-					clearInterval(window.crossfadeIntervalId);
-					fromAudioElement.pause();
-					fromAudioElement.removeAttribute('data-crossfade');
-					toAudioElement.removeAttribute('data-crossfade');
-				}
-
-				// change the volume based on our intervalMS and crossfade value
-				const volumeIncrement = intervalMS / crossfade.value;
-				fromAudioElement.volume = Math.max(fromAudioElement.volume - volumeIncrement, 0);
-				toAudioElement.volume = Math.min(toAudioElement.volume + volumeIncrement, masterVolumeAudioValue);
-			};
-
-			const onTimeUpdate = (audioElement, otherAudioElement) => {
-				// if we're already crossfading, do nothing
-				const fromAudioElement = document.querySelector('[data-crossfade="from"]');
-				const toAudioElement = document.querySelector('[data-crossfade="to"]');
-				if (fromAudioElement || toAudioElement) {
-					return;
-				}
-				// if the element is paused, do nothing
-				if (audioElement.paused) {
-					return;
-				}
-				// if passthrough is enabled, do nothing
-				if (passthrough.checked) {
-					return;
-				}
-				// if we've hit the end (point B), start the other audio element
-				if (audioElement.currentTime >= pointB.value) {
-					startCrossfade(audioElement, otherAudioElement);
-				}
-			};
-
-			audio1.addEventListener('timeupdate', () => onTimeUpdate(audio1, audio2));
-			audio2.addEventListener('timeupdate', () => onTimeUpdate(audio2, audio1));
+			// wire crossfade and point elements to audio tracks
+			crossfade.addEventListener('input', () => (audioTracks.crossfade = parseInt(crossfade.value)));
+			pointA.addEventListener('input', () => (audioTracks.pointA = parseInt(pointA.value)));
+			pointB.addEventListener('input', () => (audioTracks.pointB = parseInt(pointB.value)));
+			passthrough.addEventListener('change', () => (audioTracks.passthrough = passthrough.checked));
 		</script>
 	</body>
 </html>
