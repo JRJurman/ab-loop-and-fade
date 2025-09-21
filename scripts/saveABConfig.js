@@ -1,3 +1,10 @@
+/*
+ * This file contains the main script and functions for saving and loading `.abconfig` files.
+ * These files are special files that contain a header, JSON config, and the original audio file.
+ * The header contains a magic string ('ABCONFIG'), a version number ('01'), and the length of the JSON config.
+ * The JSON config contains the details from `ab-controls`, as well as some other file and app meta data.
+ */
+
 const version = 1;
 const magic = 'ABCONFIG';
 
