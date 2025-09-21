@@ -1,3 +1,9 @@
+/*
+ * This file contains the generic ab-range-input component.
+ * It is a generic component for displaying a label, range input, and a corresponding output element.
+ * There is also logic for setting / reading query parameters (unused).
+ */
+
 const abRangeInputStyleSheet = new CSSStyleSheet();
 abRangeInputStyleSheet.replaceSync(`
 	label {

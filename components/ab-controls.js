@@ -1,3 +1,9 @@
+/*
+ * This file contains the ab-controls component.
+ * This component has the controls for an ab-audio-block (pointA, pointB, etc).
+ * This component also controls what configuration is saved / loaded in an `.abconfig` file.
+ */
+
 const abControlsStyleSheet = new CSSStyleSheet();
 abControlsStyleSheet.replaceSync(`
 	label {

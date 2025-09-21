@@ -41,3 +41,8 @@ Tiny Web App for AB Looping and Cross fade for Background music tracks
 	How long you want both of the tracks to be playing on top of each other. A longer crossfade can make the
 	transition feel more seamless.
 </p>
+<p>
+	<strong>Export - </strong>
+	This saves an <code>.abconfig</code> file on your computer that is a combination of the above configurations
+	and the audio file, so you can quickly load saved configurations later.
+</p>

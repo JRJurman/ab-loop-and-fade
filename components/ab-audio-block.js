@@ -1,3 +1,9 @@
+/*
+ * This file contains the ab-audio-block component; it is a combination of ab-controls, ab-tracks, and a file input.
+ * It is the main block in the app for each track.
+ * It is dependent on the `saveABConfig.js` scripts (for saving and loading `.abconfig` files)
+ */
+
 const abAudioBlockStyleSheet = new CSSStyleSheet();
 abAudioBlockStyleSheet.replaceSync(`
 	:host {

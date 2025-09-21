@@ -1,3 +1,9 @@
+/*
+ * This file contains the ab-tracks component.
+ * It is a generic component for displaying a label, range input, and a corresponding output element.
+ * There is also logic for setting / reading query parameters (unused).
+ */
+
 const abAudioTracksStyleSheet = new CSSStyleSheet();
 abAudioTracksStyleSheet.replaceSync(`
 	audio {

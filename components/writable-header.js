@@ -1,3 +1,9 @@
+/*
+ * This file contains the writable-header component.
+ * It is a generic component for making a content-editable header, that lets the user rename the page.
+ * There is also logic for setting / reading query parameters.
+ */
+
 const writableHeaderStyleSheet = new CSSStyleSheet();
 writableHeaderStyleSheet.replaceSync(`
 `);
