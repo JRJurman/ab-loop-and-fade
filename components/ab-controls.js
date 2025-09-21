@@ -57,13 +57,20 @@ class ABControls extends HTMLElement {
 	}
 
 	loadConfig(newConfig) {
-		// set max before setting value, so we don't undercut
+		// this sets the max value before setting the actual value, so we don't clip to the existing max
 		// (these will get fixed up later when we load the true duration)
+		// additionally, we dispatch an input event, so that elements that are watching for this input update
+
 		this.pointA.max = newConfig.pointA;
 		this.pointA.value = newConfig.pointA;
+		this.pointA.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+
 		this.pointB.max = newConfig.pointB;
 		this.pointB.value = newConfig.pointB;
+		this.pointB.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+
 		this.crossfade.value = newConfig.crossfade;
+		this.crossfade.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
 	}
 }
 
