@@ -14,7 +14,7 @@ const jsonLengthOffset = magicSize + versionSize;
 
 const littleEndian = true;
 
-const buildHeaderAndJSON = async (audioFile, config) => {
+const buildAudioPackageBlob = async (audioFile, config) => {
 	// metadata config
 	const meta = {
 		type: 'AB-CONFIG',
@@ -31,45 +31,26 @@ const buildHeaderAndJSON = async (audioFile, config) => {
 	const header = new Uint8Array(headerSize);
 
 	header.set(magicBytes, headerOffset);
-
 	const dv = new DataView(header.buffer);
 	dv.setUint16(versionOffset, version, littleEndian);
 	dv.setUint32(jsonLengthOffset, jsonBytes.length, littleEndian);
 
-	return [header, jsonBytes];
+	return new Blob([header, jsonBytes, audioFile], { type: 'application/octet-stream' });
 };
 
-const saveConfigFile = async (audioFile, config) => {
-	if (!audioFile) {
-		console.warn('No Audio File selected');
-		return;
-	}
+const downloadABConfig = async (audioFile, config) => {
+	const blob = await buildAudioPackageBlob(audioFile, config);
+	const url = URL.createObjectURL(blob);
 
-	try {
-		// generate a suggested filename
-		const fileName = audioFile.name.replace(/\..*/, '');
-		const suggestedName = `${fileName}.abconfig`;
+	// generate a suggested filename
+	const fileName = audioFile.name.replace(/\..*/, '');
+	const suggestedName = `${fileName}.abconfig`;
 
-		// create a new handle
-		const newHandle = await window.showSaveFilePicker({
-			suggestedName: suggestedName,
-		});
-
-		const [header, jsonBytes] = await buildHeaderAndJSON(audioFile, config);
-
-		// create a FileSystemWritableFileStream to write to
-		const writableStream = await newHandle.createWritable();
-
-		// write our file
-		await writableStream.write(header);
-		await writableStream.write(jsonBytes);
-		await writableStream.write(audioFile);
-
-		// close the file and write the contents to disk.
-		await writableStream.close();
-	} catch (err) {
-		console.error(err.name, err.message);
-	}
+	const a = document.createElement('a');
+	a.href = url;
+	a.download = suggestedName;
+	a.click();
+	URL.revokeObjectURL(url);
 };
 
 const loadConfigFile = async (configFile) => {

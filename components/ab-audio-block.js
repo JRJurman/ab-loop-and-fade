@@ -149,7 +149,7 @@ class ABAudioBlock extends HTMLElement {
 
 		// wire export control
 		this.exportConfig.addEventListener('click', () => {
-			saveConfigFile(this.file, this.controls.getConfig());
+			downloadABConfig(this.file, this.controls.getConfig());
 		});
 
 		// wire crossfade and point elements to audio tracks
