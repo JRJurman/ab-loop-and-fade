@@ -29,6 +29,7 @@ class ABControls extends HTMLElement {
 
 		const passthroughLabel = document.createElement('label');
 		this.passthrough = document.createElement('input');
+		this.passthrough.name = 'passthrough';
 		this.passthrough.type = 'checkbox';
 		passthroughLabel.textContent = 'Passthrough';
 		passthroughLabel.append(this.passthrough);
@@ -45,6 +46,24 @@ class ABControls extends HTMLElement {
 			this.pointB.disabled = passthrough.checked;
 		};
 		this.passthrough.addEventListener('change', onPassthroughChange);
+	}
+
+	getConfig() {
+		return {
+			pointA: this.pointA.value,
+			pointB: this.pointB.value,
+			crossfade: this.crossfade.value,
+		};
+	}
+
+	loadConfig(newConfig) {
+		// set max before setting value, so we don't undercut
+		// (these will get fixed up later when we load the true duration)
+		this.pointA.max = newConfig.pointA;
+		this.pointA.value = newConfig.pointA;
+		this.pointB.max = newConfig.pointB;
+		this.pointB.value = newConfig.pointB;
+		this.crossfade.value = newConfig.crossfade;
 	}
 }
 

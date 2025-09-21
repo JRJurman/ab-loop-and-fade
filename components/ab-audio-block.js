@@ -16,8 +16,40 @@ abAudioBlockStyleSheet.replaceSync(`
 		border-style: solid;
 	}
 
+	summary {
+		float: left;
+		width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+	}
+
+	details[open] summary {
+		width: 78%;
+	}
+
 	summary.playing::marker {
 		content: '🔊 ';
+	}
+
+	input {
+		color: rgba(0,0,0,0)
+	}
+
+	button {
+		font-family: 'Kanit', sans-serif;
+		text-decoration: underline;
+		cursor: pointer;
+		background: none;
+		color: currentColor;
+		border: none;
+		font-size: 1em;
+		font-weight: inherit;
+		padding: 0;
+	}
+
+	#exportButton {
+		display: block;
+    margin-left: auto;
 	}
 `);
 
@@ -44,9 +76,17 @@ class ABAudioBlock extends HTMLElement {
 
 	connectedCallback() {
 		// populate the shadow root with all the elements this component needs
+		this.fileInputLabel = document.createElement('label');
+		this.fileInputLabel.textContent = 'Audio Track / ABConfig ';
 		this.fileInput = document.createElement('input');
 		this.fileInput.type = 'file';
-		this.fileInput.accept = 'audio/*';
+		this.fileInput.accept = '.abconfig,audio/*';
+		this.fileInputLabel.append(this.fileInput);
+
+		this.exportConfig = document.createElement('button');
+		this.exportConfig.id = 'exportButton';
+		this.exportConfig.textContent = 'Export Config';
+		this.exportConfig.style.display = 'none';
 
 		const trackFieldset = document.createElement('fieldset');
 		const trackFieldsetLegend = document.createElement('legend');
@@ -64,12 +104,27 @@ class ABAudioBlock extends HTMLElement {
 		detailsElement.open = true;
 		this.detailsElementSummary = document.createElement('summary');
 		this.detailsElementSummary.style.display = 'none';
-		detailsElement.append(this.detailsElementSummary, this.fileInput, trackFieldset, controlFieldset);
+		detailsElement.append(
+			this.detailsElementSummary,
+			this.fileInputLabel,
+			this.exportConfig,
+			trackFieldset,
+			controlFieldset
+		);
+
 		this.shadowRoot.append(detailsElement);
 
 		// wire file loading control
 		this.fileInput.addEventListener('change', async () => {
-			this.file = this.fileInput.files?.[0];
+			const fileToLoad = this.fileInput.files?.[0];
+
+			if (fileToLoad.name.endsWith('.abconfig')) {
+				const { audioFile, config } = await loadConfigFile(fileToLoad);
+				this.file = audioFile;
+				this.controls.loadConfig(config);
+			} else {
+				this.file = fileToLoad;
+			}
 			const url = URL.createObjectURL(this.file);
 
 			// load the audio to the audio players
@@ -83,9 +138,18 @@ class ABAudioBlock extends HTMLElement {
 			// update the summary element
 			this.detailsElementSummary.style.display = '';
 			this.detailsElementSummary.textContent = this.file.name;
+			this.detailsElementSummary.title = this.file.name;
+
+			// reveal the export control
+			this.exportConfig.style.display = '';
 
 			// hide the file input control
-			this.fileInput.style.display = 'none';
+			this.fileInputLabel.style.display = 'none';
+		});
+
+		// wire export control
+		this.exportConfig.addEventListener('click', () => {
+			saveConfigFile(this.file, this.controls.getConfig());
 		});
 
 		// wire crossfade and point elements to audio tracks
