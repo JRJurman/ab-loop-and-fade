@@ -245,9 +245,17 @@
 
 			// wire control for adding more tracks
 			addTrackButton.addEventListener('click', () => {
+				addTrack();
+			});
+
+			const addTrack = (file) => {
 				const newAudioBlock = document.createElement('ab-audio-block');
 				audioBlocks.appendChild(newAudioBlock);
-			});
+
+				if (file) {
+					newAudioBlock.loadFile(file);
+				}
+			};
 		</script>
 	</body>
 </html>

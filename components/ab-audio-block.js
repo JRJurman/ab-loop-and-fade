@@ -77,8 +77,9 @@ class ABAudioBlock extends HTMLElement {
 	connectedCallback() {
 		// populate the shadow root with all the elements this component needs
 		this.fileInputLabel = document.createElement('label');
-		this.fileInputLabel.textContent = 'Audio Track / ABConfig ';
+		this.fileInputLabel.textContent = 'Audio Tracks / ABConfigs ';
 		this.fileInput = document.createElement('input');
+		this.fileInput.multiple = true;
 		this.fileInput.type = 'file';
 		this.fileInput.accept = '.abconfig,audio/*';
 		this.fileInputLabel.append(this.fileInput);
@@ -118,33 +119,14 @@ class ABAudioBlock extends HTMLElement {
 		this.fileInput.addEventListener('change', async () => {
 			const fileToLoad = this.fileInput.files?.[0];
 
-			if (fileToLoad.name.endsWith('.abconfig')) {
-				const { audioFile, config } = await loadConfigFile(fileToLoad);
-				this.file = audioFile;
-				this.controls.loadConfig(config);
-			} else {
-				this.file = fileToLoad;
+			this.loadFile(fileToLoad);
+
+			// if there were more files, create new tracks and load them
+			if (this.fileInput.files.length > 1) {
+				[...this.fileInput.files].slice(1).forEach((file) => {
+					addTrack(file);
+				});
 			}
-			const url = URL.createObjectURL(this.file);
-
-			// load the audio to the audio players
-			this.audioTracks.loadSource(url);
-
-			// update the point A and B max values
-			const duration = await getAudioDuration(url);
-			this.controls.pointA.max = duration;
-			this.controls.pointB.max = duration;
-
-			// update the summary element
-			this.detailsElementSummary.style.display = '';
-			this.detailsElementSummary.textContent = this.file.name;
-			this.detailsElementSummary.title = this.file.name;
-
-			// reveal the export control
-			this.exportConfig.style.display = '';
-
-			// hide the file input control
-			this.fileInputLabel.style.display = 'none';
 		});
 
 		// wire export control
@@ -179,6 +161,36 @@ class ABAudioBlock extends HTMLElement {
 				this.detailsElementSummary.classList.remove('playing');
 			}
 		});
+	}
+
+	async loadFile(file) {
+		if (file.name.endsWith('.abconfig')) {
+			const { audioFile, config } = await loadConfigFile(file);
+			this.file = audioFile;
+			this.controls.loadConfig(config);
+		} else {
+			this.file = file;
+		}
+		const url = URL.createObjectURL(this.file);
+
+		// load the audio to the audio players
+		this.audioTracks.loadSource(url);
+
+		// update the point A and B max values
+		const duration = await getAudioDuration(url);
+		this.controls.pointA.max = duration;
+		this.controls.pointB.max = duration;
+
+		// update the summary element
+		this.detailsElementSummary.style.display = '';
+		this.detailsElementSummary.textContent = this.file.name;
+		this.detailsElementSummary.title = this.file.name;
+
+		// reveal the export control
+		this.exportConfig.style.display = '';
+
+		// hide the file input control
+		this.fileInputLabel.style.display = 'none';
 	}
 }
 
