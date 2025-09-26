@@ -188,9 +188,10 @@ class ABAudioBlock extends HTMLElement {
 		this.controls.pointB.max = duration;
 
 		// update the summary element
+		const fileName = file.name.replace(/\..+$/, '');
 		this.detailsElementSummary.style.display = '';
-		this.detailsElementSummary.textContent = this.file.name;
-		this.detailsElementSummary.title = this.file.name;
+		this.detailsElementSummary.textContent = fileName;
+		this.detailsElementSummary.title = fileName;
 
 		// reveal the export control
 		this.exportConfig.style.display = '';
