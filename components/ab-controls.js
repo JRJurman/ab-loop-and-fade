@@ -49,7 +49,7 @@ class ABControls extends HTMLElement {
 
 		// wire passthrough handler
 		const onPassthroughChange = () => {
-			this.pointB.disabled = passthrough.checked;
+			this.pointB.disabled = this.passthrough.checked;
 		};
 		this.passthrough.addEventListener('change', onPassthroughChange);
 	}
