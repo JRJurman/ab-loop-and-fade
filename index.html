@@ -22,6 +22,7 @@
 		<!-- components -->
 		<script src="./scripts/saveABConfig.js"></script>
 		<script src="./components/ab-audio-block.js"></script>
+		<script src="./components/ab-track-select.js"></script>
 		<script src="./components/ab-range-input.js"></script>
 		<script src="./components/ab-tracks.js"></script>
 		<script src="./components/ab-controls.js"></script>
@@ -153,6 +154,12 @@
 			ol {
 				padding-left: 1em;
 			}
+
+			ab-top-controls {
+				display: flex;
+				flex-direction: column;
+				gap: 0.2em;
+			}
 		</style>
 	</head>
 	<body>
@@ -166,7 +173,11 @@
 			<button id="aboutButton" type="button" commandfor="aboutDialog" command="show-modal">About / How to Use</button>.
 		</footer>
 		<main>
-			<ab-range-input id="masterVolume" min="0" max="100" step="1" value="100">Master Volume</ab-range-input>
+			<ab-top-controls>
+				<ab-range-input id="masterVolume" min="0" max="100" step="1" value="100">Master Volume</ab-range-input>
+				<ab-track-select id="playingSelect" label="Source" action="Play Source"></ab-track-select>
+				<ab-track-select id="transitionSelect" label="Destination" action="Crossfade Tracks"></ab-track-select>
+			</ab-top-controls>
 			<audio-blocks id="audioBlocks">
 				<ab-audio-block></ab-audio-block>
 			</audio-blocks>
@@ -238,15 +249,20 @@
 			};
 			masterVolume.addEventListener('input', onMasterVolumeChange);
 
+			const firstAudioBlock = audioBlocks.firstElementChild;
+
 			// wire file loading control for setting document title
-			const firstFileInput = audioBlocks.firstElementChild.fileInput;
-			firstFileInput.addEventListener('change', async () => {
+			firstAudioBlock.addEventListener('load-track', () => {
 				// if pageTitle is the default, and there is only one audio block, set it to the track name
 				if (pageTitle.isDefault() && audioBlocks.children.length === 1) {
-					document.title = firstFileInput.files?.[0]?.name;
-					pageTitle.titleFallback = firstFileInput.files?.[0]?.name;
+					document.title = firstAudioBlock.fileName;
+					pageTitle.titleFallback = firstAudioBlock.fileName;
 				}
 			});
+
+			// wire adding this option to the play and transition selects
+			playingSelect.addTrackOption(firstAudioBlock, true);
+			transitionSelect.addTrackOption(firstAudioBlock, true);
 
 			// wire control for adding more tracks
 			addTrackButton.addEventListener('click', () => {
@@ -257,10 +273,27 @@
 				const newAudioBlock = document.createElement('ab-audio-block');
 				audioBlocks.appendChild(newAudioBlock);
 
+				playingSelect.addTrackOption(newAudioBlock);
+				transitionSelect.addTrackOption(newAudioBlock);
+
 				if (file) {
 					newAudioBlock.loadFile(file);
 				}
 			};
+		</script>
+		<script>
+			// wire playing and transition track select controls
+			playingSelect.addEventListener('trigger-action', () => {
+				playingSelect.selectedTrackBlock.play();
+			});
+
+			transitionSelect.addEventListener('trigger-action', () => {
+				playingSelect.selectedTrackBlock?.fadeOut();
+				transitionSelect.selectedTrackBlock?.fadeIn();
+
+				// swap selected values
+				playingSelect.setSelectedTrack(transitionSelect.selectedTrack.value);
+			});
 		</script>
 	</body>
 </html>

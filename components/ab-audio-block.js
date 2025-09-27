@@ -188,16 +188,31 @@ class ABAudioBlock extends HTMLElement {
 		this.controls.pointB.max = duration;
 
 		// update the summary element
-		const fileName = file.name.replace(/\..+$/, '');
+		this.fileName = file.name.replace(/\..+$/, '');
 		this.detailsElementSummary.style.display = '';
-		this.detailsElementSummary.textContent = fileName;
-		this.detailsElementSummary.title = fileName;
+		this.detailsElementSummary.textContent = this.fileName;
+		this.detailsElementSummary.title = this.fileName;
 
 		// reveal the export control
 		this.exportConfig.style.display = '';
 
 		// hide the file input control
 		this.fileInputLabel.style.display = 'none';
+
+		// dispatch event in case any elements were watching this element
+		this.dispatchEvent(new Event('load-track', { bubbles: true, composed: true }));
+	}
+
+	play() {
+		this.audioTracks.play();
+	}
+
+	fadeIn() {
+		this.audioTracks.fadeIn();
+	}
+
+	fadeOut() {
+		this.audioTracks.fadeOut();
 	}
 }
 

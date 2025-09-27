@@ -20,11 +20,11 @@ class ABAudioTracks extends HTMLElement {
 
 		this.masterVolume = 1;
 		this.crossfade = 1500;
-		this.crossFadeFrom = undefined;
-		this.crossFadeTo = undefined;
 		this.pointA = 30;
 		this.pointB = 90;
 		this.passthrough = false;
+		this.intervalMS = 10;
+		this.crossfadeIntervalIds = {};
 	}
 
 	get isPlaying() {
@@ -75,42 +75,53 @@ class ABAudioTracks extends HTMLElement {
 		this.audio2.volume = newVolume;
 	}
 
-	watchForCrossFade() {
-		const intervalMS = 10;
-		// helper function to kick off crossfading
-		const startCrossfade = (fromAudioElement, toAudioElement) => {
-			this.crossFadeFrom = fromAudioElement;
-			this.crossFadeTo = toAudioElement;
-
-			// setup our toAudioElement
-			toAudioElement.volume = 0;
-			toAudioElement.currentTime = this.pointA;
-			toAudioElement.play();
-
-			// fixed interval of 10 ms
-			this.crossfadeIntervalId = setInterval(stepCrossfade, intervalMS);
-		};
-
+	stepCrossfade(crossFadeInvervalKey, crossFadeFrom, crossFadeTo, fadeRate) {
 		// helper function to slowly control the volume of each audio player
-		const stepCrossfade = () => {
-			// change the volume based on our intervalMS and crossfade value
-			const volumeIncrement = intervalMS / this.crossfade;
-			this.crossFadeFrom.volume = Math.max(this.crossFadeFrom.volume - volumeIncrement, 0);
-			this.crossFadeTo.volume = Math.min(this.crossFadeTo.volume + volumeIncrement, this.masterVolume);
 
-			// if we've finished, clear the interval
-			if (this.crossFadeTo.volume >= this.masterVolume) {
-				clearInterval(this.crossfadeIntervalId);
-				this.crossFadeFrom.pause();
-				this.crossFadeFrom = undefined;
-				this.crossFadeTo = undefined;
+		// change the volume based on our intervalMS and crossfade value
+		// (if we have a fadeRate, use that instead)
+		const volumeIncrement = fadeRate || this.intervalMS / this.crossfade;
+		if (crossFadeFrom) {
+			crossFadeFrom.volume = Math.max(crossFadeFrom.volume - volumeIncrement, 0);
+		}
+		if (crossFadeTo) {
+			crossFadeTo.volume = Math.min(crossFadeTo.volume + volumeIncrement, this.masterVolume);
+		}
+
+		// if we've finished, clear the interval
+		const crossFadeToHasMasterVolume = crossFadeTo?.volume >= this.masterVolume;
+		const crossFadeFromHasNoVolume = crossFadeFrom?.volume <= 0;
+		if (crossFadeToHasMasterVolume || crossFadeFromHasNoVolume) {
+			clearInterval(this.crossfadeIntervalIds[crossFadeInvervalKey]);
+			delete this.crossfadeIntervalIds[crossFadeInvervalKey];
+			this.crossfadeIntervalIds;
+			if (crossFadeFrom) {
+				crossFadeFrom.pause();
 			}
-		};
+		}
+	}
 
+	startCrossfade(fromAudioElement, toAudioElement, overrides) {
+		// setup our toAudioElement (if we have one)
+		if (toAudioElement) {
+			toAudioElement.volume = 0;
+			toAudioElement.currentTime = overrides?.start ?? this.pointA;
+			toAudioElement.play();
+		}
+
+		// fixed interval of 10 ms
+		const crossFadeInvervalKey = parseInt(Object.keys(this.crossfadeIntervalIds).at(-1) || '-1') + 1;
+		this.crossfadeIntervalIds[crossFadeInvervalKey] = setInterval(
+			() => this.stepCrossfade(crossFadeInvervalKey, fromAudioElement, toAudioElement, overrides?.fadeRate),
+			this.intervalMS
+		);
+	}
+
+	watchForCrossFade() {
 		// helper function to check if we should be triggering a crossfade
 		const onTimeUpdate = (audioElement, otherAudioElement) => {
 			// if we're already crossfading, do nothing
-			if (this.crossFadeFrom || this.crossFadeTo) {
+			if (Object.values(this.crossfadeIntervalIds).length > 0) {
 				return;
 			}
 			// if the element is paused, do nothing
@@ -123,7 +134,7 @@ class ABAudioTracks extends HTMLElement {
 			}
 			// if we've hit the end (point B), start the other audio element
 			if (audioElement.currentTime >= this.pointB) {
-				startCrossfade(audioElement, otherAudioElement);
+				this.startCrossfade(audioElement, otherAudioElement);
 			}
 		};
 
@@ -134,6 +145,27 @@ class ABAudioTracks extends HTMLElement {
 	addPlaybackListener(callback) {
 		this.audio1.addEventListener('timeupdate', callback);
 		this.audio2.addEventListener('timeupdate', callback);
+	}
+
+	play() {
+		this.audio1.currentTime = 0;
+		this.audio1.volume = this.masterVolume;
+		this.audio1.play();
+	}
+
+	fadeOut() {
+		this.audio1.volume = this.masterVolume;
+		this.audio2.volume = this.masterVolume;
+
+		this.startCrossfade(this.audio1, null, { fadeRate: 0.001 });
+		this.startCrossfade(this.audio2, null, { fadeRate: 0.001 });
+	}
+
+	fadeIn() {
+		this.audio1.volume = this.masterVolume;
+		this.audio2.volume = this.masterVolume;
+
+		this.startCrossfade(null, this.audio1, { start: 0, fadeRate: 0.001 });
 	}
 }
 
